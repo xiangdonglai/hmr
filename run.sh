@@ -1,0 +1,2 @@
+# python -m demo --img_path /media/posefs1b/Users/donglaix/siggasia018/dslr_dance1/openpose_image/dslr_dance1_000000000000_rendered.png --json_path /media/posefs1b/Users/donglaix/siggasia018/dslr_dance1/openpose_result/dslr_dance1_000000000001_keypoints.json
+python -m mydemo --img_path_file run_files/dslr_dance1_image.txt --json_path_file run_files/dslr_dance1_json.txt --output_path /media/posefs1b/Users/donglaix/siggasia018/dslr_dance1/img_output/angjoo/

@@ -61,45 +61,49 @@ def visualize(img, proc_param, joints, verts, cam):
 
     # import matplotlib.pyplot as plt
     # plt.ion()
-    """
-    plt.figure(1)
-    plt.clf()
-    plt.subplot(231)
-    plt.imshow(img)
-    plt.title('input')
-    plt.axis('off')
-    plt.subplot(232)
-    plt.imshow(skel_img)
-    plt.title('joint projection')
-    plt.axis('off')
-    plt.subplot(233)
-    plt.imshow(rend_img_overlay)
-    plt.title('3D Mesh overlay')
-    plt.axis('off')
-    plt.subplot(234)
-    plt.imshow(rend_img)
-    plt.title('3D mesh')
-    plt.axis('off')
-    plt.subplot(235)
-    plt.imshow(rend_img_vp1)
-    plt.title('diff vp')
-    plt.axis('off')
-    plt.subplot(236)
-    plt.imshow(rend_img_vp2)
-    plt.title('diff vp')
-    plt.axis('off')
-    plt.draw()
-    plt.show()
+    # plt.figure(1)
+    # plt.clf()
+    # plt.subplot(231)
+    # plt.imshow(img)
+    # plt.title('input')
+    # plt.axis('off')
+    # plt.subplot(232)
+    # plt.imshow(skel_img)
+    # plt.title('joint projection')
+    # plt.axis('off')
+    # plt.subplot(233)
+    # plt.imshow(rend_img_overlay)
+    # plt.title('3D Mesh overlay')
+    # plt.axis('off')
+    # plt.subplot(234)
+    # plt.imshow(rend_img)
+    # plt.title('3D mesh')
+    # plt.axis('off')
+    # plt.subplot(235)
+    # plt.imshow(rend_img_vp1)
+    # plt.title('diff vp')
+    # plt.axis('off')
+    # plt.subplot(236)
+    # plt.imshow(rend_img_vp2)
+    # plt.title('diff vp')
+    # plt.axis('off')
+    # plt.draw()
+    # plt.show()
     # import ipdb
     # ipdb.set_trace()
-    """
     return rend_img_overlay
 
 def preprocess_image(img_path, json_path=None):
     img = io.imread(img_path)
+    if img.shape[2] == 4:
+        img = img[:, :, :3]
 
     if json_path is None:
-        scale = 1.
+        if np.max(img.shape[:2]) != config.img_size:
+            print('Resizing so the max image size is %d..' % config.img_size)
+            scale = (float(config.img_size) / np.max(img.shape[:2]))
+        else:
+            scale = 1.
         center = np.round(np.array(img.shape[:2]) / 2).astype(int)
         # image center in (x,y)
         center = center[::-1]
@@ -119,6 +123,8 @@ def main(img_path_file, json_path_file=None, output_path=None):
     sess = tf.Session()
     model = RunModel(config, sess=sess)
     assert img_path_file is not None and json_path_file is not None and output_path is not None
+    if not os.path.isdir(output_path):
+        os.makedirs(output_path)
 
     with open(img_path_file) as f:
         img_paths = [line.strip() for line in f]
@@ -129,6 +135,7 @@ def main(img_path_file, json_path_file=None, output_path=None):
     for img_path, json_path in zip(img_paths, json_paths):
         count += 1
         print('processing image {} / {}'.format(count, len(img_paths)))
+
         input_img, proc_param, img = preprocess_image(img_path, json_path)
         # Add batch dimension: 1 x D x D x 3
         input_img = np.expand_dims(input_img, 0)
@@ -139,8 +146,8 @@ def main(img_path_file, json_path_file=None, output_path=None):
         rendered = visualize(img, proc_param, joints[0], verts[0], cams[0])
 
         output_file = os.path.join(output_path, os.path.basename(img_path[:-4]) + '.png')
-        cv2.imwrite(output_file, rendered[:, :, ::-1])
-        
+        io.imsave(output_file, rendered)
+        # cv2.imwrite(output_file, rendered)
 
 
 if __name__ == '__main__':
